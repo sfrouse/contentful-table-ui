@@ -20,7 +20,8 @@ export const AppStateProvider = ({
     children: React.ReactNode;
 }) => {
     const [route, setRoute] = useState<AppStateRoute>({});
-    const { contentTypes, loadEntriesForContentType } = useContentful();
+    const { contentTypes, loadEntriesForContentType, setLoading } =
+        useContentful();
 
     useEffect(() => {
         if (!route.contentTypeId && contentTypes?.length > 0) {
@@ -29,9 +30,13 @@ export const AppStateProvider = ({
     }, [contentTypes]);
 
     useEffect(() => {
-        if (route.contentTypeId) {
-            loadEntriesForContentType(route.contentTypeId);
-        }
+        (async () => {
+            if (route.contentTypeId) {
+                setLoading(true);
+                await loadEntriesForContentType(route.contentTypeId, true);
+                setLoading(false);
+            }
+        })();
     }, [route]);
 
     return (

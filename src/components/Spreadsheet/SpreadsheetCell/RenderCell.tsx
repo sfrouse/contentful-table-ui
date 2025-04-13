@@ -5,12 +5,14 @@ type RenderCellProps = {
     value: any;
     fieldType: string | undefined;
     setIsEditing: (val: boolean) => void;
+    children?: React.ReactNode;
 };
 
 export default function RenderCell({
-    value = "not found",
+    value, // = "not found",
     fieldType = "none",
     setIsEditing = () => {},
+    children,
 }: RenderCellProps): React.ReactNode {
     const baseStyles: React.CSSProperties = {
         padding: `0 ${tokens.spacingS}`,
@@ -18,9 +20,10 @@ export default function RenderCell({
         width: "100%",
         height: "100%",
         display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        justifyContent: "center",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        gap: 4,
     };
 
     type ValueSpanProps = {
@@ -51,6 +54,8 @@ export default function RenderCell({
         }
     };
 
+    const nullValue = <span style={{ color: tokens.gray400 }}>--</span>;
+
     switch (fieldType) {
         case "Symbol":
         case "Text":
@@ -61,8 +66,10 @@ export default function RenderCell({
                     style={{
                         ...baseStyles,
                     }}
+                    title={value ? String(value) : ""}
                 >
-                    <ValueSpan>{String(value)}</ValueSpan>
+                    <ValueSpan>{value ? String(value) : nullValue}</ValueSpan>
+                    {children}
                 </div>
             );
 
@@ -76,10 +83,13 @@ export default function RenderCell({
                     style={{ ...baseStyles }}
                 >
                     <ValueSpan style={{ textAlign: "right" }}>
-                        {new Intl.NumberFormat(undefined, {
-                            maximumFractionDigits: 2,
-                        }).format(Number(value))}
+                        {isNaN(Number(value)) || undefined
+                            ? nullValue
+                            : new Intl.NumberFormat(undefined, {
+                                  maximumFractionDigits: 2,
+                              }).format(Number(value))}
                     </ValueSpan>
+                    {children}
                 </div>
             );
 
@@ -92,6 +102,7 @@ export default function RenderCell({
                     <ValueSpan style={{ textAlign: "right" }}>
                         {value ? "true" : "false"}
                     </ValueSpan>
+                    {children}
                 </div>
             );
 
@@ -104,6 +115,7 @@ export default function RenderCell({
                     <ValueSpan style={{ textAlign: "right" }}>
                         {new Date(value).toLocaleDateString()}
                     </ValueSpan>
+                    {children}
                 </div>
             );
 
@@ -113,11 +125,14 @@ export default function RenderCell({
                     className={styles.spreadsheetCell}
                     style={{ ...baseStyles }}
                 >
-                    {value.lat && (
-                        <ValueSpan
-                            style={{ textAlign: "right" }}
-                        >{`Lat: ${value.lat}, Lon: ${value.lon}`}</ValueSpan>
-                    )}
+                    {value
+                        ? value.lat && (
+                              <ValueSpan style={{ textAlign: "right" }}>
+                                  {`Lat: ${value.lat}, Lon: ${value.lon}`}
+                              </ValueSpan>
+                          )
+                        : nullValue}
+                    {children}
                 </div>
             );
 
@@ -131,7 +146,10 @@ export default function RenderCell({
                     className={styles.spreadsheetCell}
                     style={{ ...baseStyles }}
                 >
-                    {value?.sys?.id && <ValueSpan>{output}</ValueSpan>}
+                    {value
+                        ? value?.sys?.id && <ValueSpan>{output}</ValueSpan>
+                        : nullValue}
+                    {children}
                 </div>
             );
 
@@ -143,13 +161,16 @@ export default function RenderCell({
                         ...baseStyles,
                     }}
                 >
-                    {Array.isArray(value) && (
-                        <ValueSpan>
-                            {(value || [])
-                                .map((item: any, i: number) => item)
-                                .join(", ")}
-                        </ValueSpan>
-                    )}
+                    {value
+                        ? Array.isArray(value) && (
+                              <ValueSpan>
+                                  {(value || [])
+                                      .map((item: any, i: number) => item)
+                                      .join(", ")}
+                              </ValueSpan>
+                          )
+                        : nullValue}
+                    {children}
                 </div>
             );
 
@@ -162,6 +183,7 @@ export default function RenderCell({
                     }}
                 >
                     <ValueSpan>[Rich Text Field]</ValueSpan>
+                    {children}
                 </div>
             ); // Could render preview
 
@@ -176,6 +198,7 @@ export default function RenderCell({
                     <ValueSpan style={{ fontSize: 9, margin: 0 }}>
                         {JSON.stringify(value, null, 2)}
                     </ValueSpan>
+                    {children}
                 </div>
             );
 
@@ -187,7 +210,8 @@ export default function RenderCell({
                         ...baseStyles,
                     }}
                 >
-                    <ValueSpan>{String(value)}</ValueSpan>
+                    <ValueSpan>{value ? String(value) : nullValue}</ValueSpan>
+                    {children}
                 </div>
             );
     }

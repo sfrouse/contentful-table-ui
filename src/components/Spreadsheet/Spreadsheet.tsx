@@ -2,10 +2,10 @@ import {
     ContentfulEntryFilter,
     useContentful,
 } from "../../contexts/ContentfulContext";
-import SpreadsheetCell from "./SpreadsheetCell/SpreadsheetCell";
 import SpreadsheetGrid from "./SpreadsheetGrid/SpreadsheetGrid";
+import { forwardRef } from "react";
 
-const Spreadsheet = () => {
+const Spreadsheet = forwardRef<HTMLDivElement>((_, ref) => {
     const {
         filteredEntries,
         focusedContentType,
@@ -45,6 +45,7 @@ const Spreadsheet = () => {
             }}
         >
             <SpreadsheetGrid
+                ref={ref}
                 numRows={totalRows}
                 numCols={totalCols}
                 colHeaders={colHeaders}
@@ -73,8 +74,6 @@ const Spreadsheet = () => {
             />
         </div>
     );
-};
-
-Spreadsheet.Cell = SpreadsheetCell;
+});
 
 export default Spreadsheet;

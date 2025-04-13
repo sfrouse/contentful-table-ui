@@ -1,4 +1,4 @@
-import { Flex } from "@contentful/f36-components";
+import { Badge, Flex } from "@contentful/f36-components";
 import tokens from "@contentful/f36-tokens";
 import { APP_BORDER } from "../../utils/styles";
 import { useContentful } from "../../../contexts/ContentfulContext";
@@ -6,10 +6,12 @@ import { useState } from "react";
 import RenderCell from "./RenderCell";
 import RenderEditCell from "./RenderEditCell";
 import styles from "./SpreadsheetCell.module.css";
+import getEntryStatus from "../../utils/getEntryPublishStatus";
 
 type SpreadsheetCellProps = {
     col: number;
     row: number;
+    isSticky?: boolean;
     isDisplayTitle?: boolean;
     style?: React.CSSProperties;
 };
@@ -17,6 +19,7 @@ type SpreadsheetCellProps = {
 const SpreadsheetCell = ({
     col,
     row,
+    isSticky = false,
     isDisplayTitle = false,
     style,
 }: SpreadsheetCellProps) => {
@@ -27,7 +30,6 @@ const SpreadsheetCell = ({
         entryChanges,
         setEntryChanges,
         addToMultiSelects,
-        setMultiSelects,
         multiSelects,
     } = useContentful();
     const [isEditing, setIsEditing] = useState<Boolean>(false);
@@ -57,7 +59,11 @@ const SpreadsheetCell = ({
         ctypeField = focusedContentType?.fields[field.ctypeIndex];
     }
 
+    const selectables = ["Symbol", "Text", "Integer", "Number"];
+    const isSelectable = selectables.includes(`${ctypeField?.type}`);
+
     let finalVal = entryField?.["en-US"];
+    let rawVal = entryField?.["en-US"];
     const changeVal = entryChanges[entry.sys.id]?.[fieldId];
     let isEdited = false;
     if (changeVal) {
@@ -74,12 +80,45 @@ const SpreadsheetCell = ({
     const isMultiSelected = multiSelects.find(
         (select) => select.row === row && select.col === col,
     );
+
+    const cls = [];
+    let child = null;
+    let isInteractive = isSelectable ? true : false;
+    if (col === 0 && isSticky) {
+        isInteractive = false;
+        const status = getEntryStatus(entry);
+        child = (
+            <Badge
+                style={{ marginRight: -4 }}
+                variant={
+                    status === "changed"
+                        ? "primary"
+                        : status === "published"
+                        ? "positive"
+                        : "warning"
+                }
+                // endIcon={<icons.AssetIcon />}
+            >
+                {status.substring(0, 1)}
+            </Badge>
+        );
+    }
+
+    if (isInteractive) {
+        cls.push(styles.hover);
+    }
+    if (isMultiSelected) {
+        cls.push(styles.multiSelected);
+    }
+
+    const onClick = () => {};
+
     return (
         <Flex
             alignItems="flex-start"
             justifyContent="center"
-            className={isMultiSelected ? styles.multiSelected : ""}
-            tabIndex={0}
+            className={cls.join(" ")}
+            tabIndex={isInteractive ? 0 : -1}
             style={{
                 cursor: "hand",
                 boxSizing: "border-box",
@@ -89,7 +128,7 @@ const SpreadsheetCell = ({
                 borderBottom: APP_BORDER,
                 position: "relative",
                 backgroundColor: isMultiSelected
-                    ? tokens.orange100
+                    ? tokens.blue100
                     : isEditing
                     ? tokens.blue100
                     : isEdited
@@ -100,21 +139,20 @@ const SpreadsheetCell = ({
                     ? tokens.fontWeightDemiBold
                     : tokens.fontWeightNormal,
             }}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                if (col === 0 && isSticky) {
+                    return;
+                }
+                addToMultiSelects(col, row);
+            }}
             onClick={(e) => {
-                e.preventDefault(); // prevent browser default
-                window.getSelection()?.removeAllRanges(); // clear any text selection
-                const shiftHeld = e.shiftKey;
-                if (shiftHeld) {
-                    addToMultiSelects(col, row);
-                } else {
-                    setMultiSelects([]);
-                    if (
-                        ["Symbol", "Text", "Integer", "Number"].includes(
-                            `${ctypeField?.type}`,
-                        )
-                    ) {
-                        !isEditing && setIsEditing((prev) => !prev);
-                    }
+                if (col === 0 && isSticky) {
+                    return;
+                }
+                if (isSelectable) {
+                    addToMultiSelects(col, row, true);
+                    !isEditing && setIsEditing((prev) => !prev);
                 }
             }}
             onKeyDown={handleKeyDown}
@@ -134,6 +172,7 @@ const SpreadsheetCell = ({
             {isEditing ? (
                 <RenderEditCell
                     value={finalVal}
+                    rawVal={rawVal}
                     fieldType={ctypeField?.type}
                     setIsEditing={setIsEditing}
                     saveValue={(newValue: string) => {
@@ -145,13 +184,30 @@ const SpreadsheetCell = ({
                             },
                         }));
                     }}
+                    clearSaveValue={() => {
+                        if (entryChanges[entry.sys.id]) {
+                            const newEntryChanges = JSON.parse(
+                                JSON.stringify(entryChanges),
+                            );
+                            delete newEntryChanges[entry.sys.id][fieldId];
+                            if (
+                                Object.keys(newEntryChanges[entry.sys.id])
+                                    .length === 0
+                            ) {
+                                delete newEntryChanges[entry.sys.id];
+                            }
+                            setEntryChanges(newEntryChanges);
+                        }
+                    }}
                 />
             ) : (
                 <RenderCell
                     value={finalVal}
                     fieldType={ctypeField?.type}
                     setIsEditing={setIsEditing}
-                ></RenderCell>
+                >
+                    {child}
+                </RenderCell>
             )}
         </Flex>
     );

@@ -38,7 +38,10 @@ interface ContentfulContextType {
     setLoading: React.Dispatch<React.SetStateAction<boolean>>;
     focusedContentType: ContentTypeProps | null;
     setFocusedContentType: (ct: ContentTypeProps | null) => void;
-    loadEntriesForContentType: (contentTypeId: string) => Promise<void>;
+    loadEntriesForContentType: (
+        contentTypeId: string,
+        resetFilters: boolean,
+    ) => Promise<void>;
     fieldsLookup: ContentfulFieldInfo;
     setFieldsLookup: (fieldsLookup: ContentfulFieldInfo) => void;
     entryChanges: ContentfulEntryChanges;
@@ -57,7 +60,7 @@ interface ContentfulContextType {
             }[]
         >
     >;
-    addToMultiSelects: (col: number, row: number) => void;
+    addToMultiSelects: (col: number, row: number, reset?: boolean) => void;
 }
 
 const ContentfulContext = createContext<ContentfulContextType | undefined>(
@@ -119,14 +122,21 @@ export const ContentfulProvider = ({
         setFilteredEntries(filteredEntries);
     }, [filters, entries]);
 
-    const loadEntriesForContentType = async (contentTypeId: string) => {
-        setFilters([]);
-        setMultiSelects([]);
-        setEntries([]);
+    const loadEntriesForContentType = async (
+        contentTypeId: string,
+        resetFilters: boolean,
+    ) => {
         const contentType =
             contentTypes.find((ct) => ct.sys.id === contentTypeId) ?? null;
-        setFocusedContentType(contentType);
         const result = await loadEntriesWithResolvedLinks(sdk, contentTypeId);
+
+        if (resetFilters) {
+            setFilters([]);
+        }
+
+        setMultiSelects([]);
+        setEntries([]);
+        setFocusedContentType(contentType);
         setEntries(result);
         setFilteredEntries(result);
 
@@ -183,7 +193,15 @@ export const ContentfulProvider = ({
         });
     };
 
-    const addToMultiSelects = (col: number, row: number) => {
+    const addToMultiSelects = (
+        col: number,
+        row: number,
+        reset: boolean = false,
+    ) => {
+        if (reset) {
+            setMultiSelects([{ row, col }]);
+            return;
+        }
         const otherColSelected = multiSelects.find(
             (select) => select.col !== col,
         );

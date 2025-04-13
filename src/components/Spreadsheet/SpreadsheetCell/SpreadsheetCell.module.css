@@ -1,11 +1,24 @@
 
 
-.spreadsheetCell:hover {
-    background-color: var( --blue-100 );
+.spreadsheetCell {
     cursor: default;
 }
 
-.multiSelected .spreadsheetCell:hover {
-    background-color: var(--orange-200);
-    cursor: default;
+.hover .spreadsheetCell:hover {
+    background-color: var( --blue-100 );
 }
+
+.hover:focus .spreadsheetCell,
+.hover:focus-visible .spreadsheetCell {
+    box-shadow: inset 0 0 0 2px var(--blue-300);
+}
+
+.hover:focus,
+.hover:focus-visible {
+    outline: none;
+}
+
+.multiSelected.hover .spreadsheetCell:hover {
+    background-color: var(--blue-200);
+}
+

@@ -1,20 +1,26 @@
 import tokens from "@contentful/f36-tokens";
 import styles from "./SpreadsheetCell.module.css";
 import { useEffect, useRef, useState } from "react";
+import { useContentful } from "../../../contexts/ContentfulContext";
 
 type RenderEditCellProps = {
     value: any;
+    rawVal: any;
     fieldType: string | undefined;
     setIsEditing: (val: boolean) => void;
     saveValue: (val: any) => void;
+    clearSaveValue: () => void;
 };
 
 export default function RenderEditCell({
+    rawVal = "not found",
     value = "not found",
     fieldType = "none",
     setIsEditing = () => {},
     saveValue = (val: any) => {},
+    clearSaveValue = () => {},
 }: RenderEditCellProps): React.ReactNode {
+    const { multiSelects, setMultiSelects } = useContentful();
     const [localValue, setLocalValue] = useState<string>(`${value}`);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -51,6 +57,8 @@ export default function RenderEditCell({
         border: "none",
         background: "transparent",
         cursor: "default",
+        outline: "none",
+        boxShadow: `inset 0 0 0 2px ${tokens.blue300}`,
     };
 
     type ValueSpanProps = {
@@ -58,21 +66,32 @@ export default function RenderEditCell({
         style?: React.CSSProperties;
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
             e.preventDefault();
             e.stopPropagation();
-            if (localValue !== `${value}`) {
+            if (localValue !== `${rawVal}`) {
                 saveValue(localValue);
+            } else {
+                clearSaveValue();
             }
             setIsEditing(false);
+            // setMultiSelects([]);
+        }
+        if (localValue !== `${rawVal}`) {
+            saveValue(localValue);
+        } else {
+            clearSaveValue();
         }
     };
     const handleOnBlur = (e: React.FocusEvent<HTMLInputElement>) => {
         setIsEditing(false);
-        if (localValue !== `${value}`) {
+        if (localValue !== `${rawVal}`) {
             saveValue(localValue);
+        } else {
+            clearSaveValue();
         }
+        // setMultiSelects([]);
     };
 
     const ValueSpan: React.FC<ValueSpanProps> = ({ children, style }) => (
@@ -99,7 +118,7 @@ export default function RenderEditCell({
                     ref={inputRef}
                     type="text"
                     value={localValue}
-                    onKeyDown={handleKeyDown}
+                    onKeyUp={handleKeyUp}
                     tabIndex={0}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         setLocalValue(event.target.value);
@@ -116,7 +135,7 @@ export default function RenderEditCell({
                     ref={inputRef}
                     type="number"
                     value={localValue}
-                    onKeyDown={handleKeyDown}
+                    onKeyUp={handleKeyUp}
                     onBlur={handleOnBlur}
                     tabIndex={0}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
