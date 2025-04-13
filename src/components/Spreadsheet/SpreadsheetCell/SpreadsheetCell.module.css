@@ -1,0 +1,11 @@
+
+
+.spreadsheetCell:hover {
+    background-color: var( --blue-100 );
+    cursor: default;
+}
+
+.multiSelected .spreadsheetCell:hover {
+    background-color: var(--orange-200);
+    cursor: default;
+}

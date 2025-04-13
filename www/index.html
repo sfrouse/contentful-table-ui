@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sticky Grid with Dynamic Row Heights</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 1rem;
+        }
+
+        .grid-container {
+            max-height: 400px;
+            overflow: auto;
+            border: 1px solid #ccc;
+        }
+
+        .grid {
+            display: grid;
+            width: max-content;
+        }
+
+        .cell {
+            border: 1px solid #eee;
+            padding: 8px;
+            background: white;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+
+        .header {
+            font-weight: bold;
+            background: #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .corner {
+            z-index: 3;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Sticky Grid with Dynamic Row Heights</h2>
+
+    <div class="grid-container">
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <script>
+        const numCols = 20;
+        const numRows = 10;
+        const rowHeights = ['40px', ...Array.from({ length: numRows }, (_, i) =>
+            i === 2 ? '100px' : '60px'
+        )]; // row 3 taller
+
+        const columnWidths = [
+            '80px', '100px', '200px', '120px',
+            ...Array(numCols - 3).fill('150px')
+        ];
+
+        const grid = document.getElementById('grid');
+        grid.style.gridTemplateColumns = columnWidths.join(' ');
+        grid.style.gridTemplateRows = rowHeights.join(' ');
+
+        // Header row
+        grid.innerHTML += `<div class="cell header sticky-col corner">#</div>`;
+        for (let i = 0; i < numCols; i++) {
+            grid.innerHTML += `<div class="cell header">${String.fromCharCode(65 + i)}</div>`;
+        }
+
+        // Data rows
+        for (let row = 1; row <= numRows; row++) {
+            grid.innerHTML += `<div class="cell sticky-col">${row}</div>`;
+            for (let col = 0; col < numCols; col++) {
+                const value = `${String.fromCharCode(65 + col)}${row}`;
+                grid.innerHTML += `<div class="cell">${value}</div>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

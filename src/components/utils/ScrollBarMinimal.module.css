@@ -1,0 +1,32 @@
+
+
+/* Minimal and Less Intrusive Scrollbar */
+.scrollbar-minimal,
+.scrollbar-minimal * {
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 100, 100, 0.4) transparent;
+}
+
+/* WebKit Browsers (Chrome, Safari, Edge) */
+.scrollbar-minimal::-webkit-scrollbar,
+.scrollbar-minimal *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-track,
+.scrollbar-minimal *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-thumb,
+.scrollbar-minimal *::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.4);
+    border-radius: 3px;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-thumb:hover,
+.scrollbar-minimal *::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 100, 100, 0.6);
+}
